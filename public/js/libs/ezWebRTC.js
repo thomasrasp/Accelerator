@@ -4,6 +4,7 @@ function initEzWebRTC(initiator, config) {
     var _this = this;
     this.isConnected = false;
     this.gotOffer = false;
+    this.makingOffer = false;
 
     var rtcConfig = { //Default Values
         offerOptions: {
@@ -18,6 +19,7 @@ function initEzWebRTC(initiator, config) {
         ],
         sdpSemantics: 'unified-plan',
         iceConnectionTimeoutInSec: 30,
+        preferH264Codec: false
     }
     if (config) {
         for (var i in config) {
@@ -102,10 +104,13 @@ function initEzWebRTC(initiator, config) {
                 await pc.setRemoteDescription(new wrtc.RTCSessionDescription(signalData))
             }
             await pc.setLocalDescription(await pc.createAnswer(rtcConfig.offerOptions));
-            _this.emitEvent("signaling", pc.localDescription)
+            var a_desc = pc.localDescription;
+            a_desc.sdp = rtcConfig.preferH264Codec ? preferH264Codec(a_desc.sdp) : a_desc.sdp;
+            _this.emitEvent("signaling", a_desc)
             if (!initiator)
                 requestMissingTransceivers()
-        } else if (signalData && signalData.type == "answer") { //STEP 5 (Initiator: Setting answer and starting connection)
+        } else if (signalData && signalData.type == "answer" && initiator) { //Initiator: Setting answer and starting connection
+            _this.makingOffer = false;
             pc.setRemoteDescription(new wrtc.RTCSessionDescription(signalData))
         } else if (signalData && signalData.type == "transceive" && initiator) { //Got an request to transrecive
             _this.addTransceiver(signalData.kind, signalData.init)
@@ -174,21 +179,24 @@ function initEzWebRTC(initiator, config) {
     }
 
     if (rtcConfig.stream) {
-        this.addStream(rtcConfig.stream); //Add stream at start, this will trigger negotiation on initiator
-    }
-
-    if (initiator && !rtcConfig.stream) { //start negotiation if we are initiator
+        this.addStream(rtcConfig.stream); //Add stream at start, this will trigger negotiation
+    } else if (initiator) { //start negotiation if we are initiator anyway if we have no stream
         negotiate();
     }
 
     async function negotiate() {
+        if (_this.makingOffer) //Dont make an offer twice before answer is received
+            return;
         //console.log("negotiate", initiator)
         if (initiator) {
+            _this.makingOffer = true;
             const offer = await pc.createOffer(rtcConfig.offerOptions); //Create offer
             if (pc.signalingState != "stable") return;
             await pc.setLocalDescription(offer);
-            _this.emitEvent("signaling", pc.localDescription)
-        } else if (_this.gotOffer) {
+            var o_desc = pc.localDescription;
+            o_desc.sdp = rtcConfig.preferH264Codec ? preferH264Codec(o_desc.sdp) : o_desc.sdp;
+            _this.emitEvent("signaling", o_desc)
+        } else if (_this.gotOffer) { //Dont send renegotiate req before getting at least one offer
             _this.emitEvent("signaling", "renegotiate");
         }
     }
@@ -223,4 +231,30 @@ function initEzWebRTC(initiator, config) {
         }
     };
     return this;
+}
+
+function preferH264Codec(sdp) {
+    var lineSplit = sdp.split("\n")
+    console.log(lineSplit)
+    var videoLinesIndexs = [];
+    var h264ids = [];
+    for (var i in lineSplit) {
+        if (lineSplit[i].startsWith("m=video")) { //find the video line
+            videoLinesIndexs.push(i);
+        } else if (lineSplit[i].startsWith("a=rtpmap")) { //find all codec lines
+            if (lineSplit[i].indexOf("H264") !== -1) {
+                h264ids.push(lineSplit[i].split("rtpmap:")[1].split(" ")[0])
+            }
+        }
+    }
+
+    for(var k in videoLinesIndexs) {
+        var videoLineIndex = videoLinesIndexs[k];
+        for (var i = h264ids.length; i--; i >= 0) { //Change codec order
+            var h264id = h264ids[i];
+            lineSplit[videoLineIndex] = lineSplit[videoLineIndex].replace(" " + h264id, "")
+            lineSplit[videoLineIndex] = lineSplit[videoLineIndex].replace("SAVPF ", "SAVPF " + h264id + " ")
+        }
+    }
+    return lineSplit.join("\n");
 }

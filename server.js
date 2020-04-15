@@ -31,7 +31,10 @@ var server = http.createServer({
 
 }, app).listen(httpPort);
 
-var io = require('socket.io').listen(server);
+var io = require('socket.io').listen(server, {
+    pingTimeout : 10000,
+    pingInterval : 25000
+});
 
 config["mcuConfig"]["masterPort"] = httpPort;
 var ezMCU = require('./acc_server_modules/ezMCU/s_ezMCUsignaling').init(io, config["mcuConfig"]);
@@ -415,7 +418,6 @@ io.sockets.on('connection', function (socket) {
         });
 
         socket.on('fixPItemPosition', function (content) {
-            console.log("get")
             if (isModerator() || socket.id == content.userId || userdata.username == content.itemUsername) {
                 if(currentLoadedTab[roomName] && userPItems[roomName] && userPItems[roomName][currentLoadedTab[roomName]]) {
                     for (var i = 0; i < userPItems[roomName][currentLoadedTab[roomName]].length; i++) {
