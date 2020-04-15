@@ -41,6 +41,7 @@
     <!-- Addons and Plugins !-->
     <script type="text/javascript" src="./js/whiteboard.js"></script>
     <script type="text/javascript" src="./js/youtubeController.js"></script>
+    <script type="text/javascript" src="./js/videoplayer.js"></script>
     <script type="text/javascript" src="./js/tourGuid.js"></script>
     <script type="text/javascript" src="./js/libs/jqColorPicker.min.js"></script>
 
@@ -314,6 +315,11 @@
                                 <button title="Youtube" tabtarget="#youtube" type="button"
                                     class="mainTab toolbar-icon btn btn-default clap">
                                     <i class="fa fa-youtube" id="youtubeBtn"></i>
+                                </button>
+                                <button title="Videos" tabtarget="#videoDiv" title="Load a Video"
+                                        id="showVideo" type="button"
+                                        class="mainTab toolbar-icon btn btn-default">
+                                        <i class="fa fa-film" id="videoplayerBtn"></i>
                                 </button>
                                 <button title="Whiteboard" tabtarget="#whiteboardScreen" id="whiteboardTabBtn"
                                     type="button" class="mainTab toolbar-icon btn btn-default">
@@ -687,6 +693,30 @@
                                             start</a> some presentation!</div>
                                     <img style="height: 275px; padding-top: 20px; opacity: 0.5;"
                                         src="./img/presentationGray.svg">
+                                </div>
+                            </div>
+
+                            <!-- Videoplayer Cast !-->
+                            <div class="praesiMainContent praesiPlaceholder" id="videoDiv"
+                                 style="display:none; text-align:center; width: 1100px; height: 757px;">
+                                <table style="margin-left: auto; margin-right: auto;">
+                                    <tr>
+                                        <td style="padding-left: 15px;" class="moderatorTools">
+                                            <input id="videoURLinput" class="form-control " type="text"
+                                                   placeholder="Enter Video from URL">
+                                        </td>
+                                        <td class="moderatorTools">
+                                            <button style="width: 50px; height: 30px; margin-left: 5px;"
+                                                    class="btn btn-info" id="loadVideoBtn">Load</button>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <div style="position:relative;" class="row">
+                                    <div style="display:none; background:rgba(0, 0, 255, 0); position:absolute; left:0px; top:0px; width:1100px; height:700px;"
+                                         id="videoOverlay"></div>
+                                    <div id="vPlayer">
+                                        <video id="video" width=1100" height="700"></video>
+                                    </div>
                                 </div>
                             </div>
 

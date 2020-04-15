@@ -534,6 +534,9 @@ function sendGetSingleFileTable() {
 function sendYoutubeCommand(content) {
     signaling_socket.emit('youtubeCommand', content);
 }
+function sendVideoCommand(content) {
+    signaling_socket.emit('videoCommand', content);
+}
 
 function sendPutRemoteHandDown(id) {
     signaling_socket.emit('putRemoteHandDown', id);
@@ -1021,6 +1024,12 @@ function initSocketIO() {
                 $("#" + content.itemId).removeClass("transparent");
                 $("#" + content.itemId).find("canvas").removeClass("transparent");
                 $("#" + content.itemId).find(".innerContent").removeClass("transparent");
+            }
+        });
+
+        signaling_socket.on('videoCommand', function (content) {
+            if (content.key == "loadVid") {
+                loadHTMLvideo(content.data, roomImIn["moderator"] == ownSocketId);
             }
         });
 

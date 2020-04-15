@@ -1233,6 +1233,14 @@ $(function () { //Document ready
 		}
 	});
 
+	$("#loadVideoBtn").click(function () {
+		var url = $.trim($("#videoURLinput").val());
+		console.log(url);
+		if (url != "") {
+			sendVideoCommand({ "key": "loadVid", "data": url});
+		}
+	});
+
 	$("#loadYoutubeBtn").click(function () {
 		var url = $.trim($("#youtubeURLinput").val());
 		if (url != "") {

@@ -480,6 +480,13 @@ io.sockets.on('connection', function (socket) {
             }
         });
 
+        socket.on('videoCommand', function (content) {
+            if (isModerator()) {
+                sendToHoleRoom(roomName, 'videoCommand', content);
+            }
+        });
+
+
         socket.on('secondHandUp', function (content) {
             if (!isModerator()) {
                 content["senderId"] = socket.id;
